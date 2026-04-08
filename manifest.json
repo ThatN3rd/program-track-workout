@@ -2,7 +2,7 @@
   "name": "Program Track",
   "short_name": "Program",
   "description": "Personal workout program tracker with progression analytics",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
