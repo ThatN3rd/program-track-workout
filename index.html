@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Program Track">
+  <meta name="theme-color" content="#ffffff">
+  <title>Program Track</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Archivo:wght@400;600&display=swap');
+    
+    :root {
+      --white: #ffffff;
+      --black: #000000;
+      --gray-50: #fafafa;
+      --gray-100: #f5f5f5;
+      --gray-200: #e5e5e5;
+      --gray-300: #d4d4d4;
+      --gray-400: #a3a3a3;
+      --gray-500: #737373;
+      --gray-600: #525252;
+      --day1: #ff4444;
+      --day2: #4488ff;
+      --day3: #44ff88;
+      --day4: #ffbb44;
+      --day5: #aa44ff;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+      background: var(--white);
+      color: var(--black);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+      min-height: 100vh;
+    }
+    
+    /* HEADER */
+    .header {
+      padding: 24px 20px;
+      border-bottom: 2px solid var(--black);
+      background: var(--white);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .today-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: var(--black);
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+    
+    .workout-title {
+      font-family: 'Archivo', sans-serif;
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .workout-subtitle {
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+    
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--gray-200);
+    }
+    
+    .stat-item {
+      flex: 1;
+    }
+    
+    .stat-label {
+      font-size: 10px;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .stat-value {
+      font-size: 18px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    
+    .weight-logger {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--gray-200);
+    }
+    
+    .weight-logger-collapsed {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      cursor: pointer;
+    }
+    
+    .weight-logger-label {
+      font-size: 11px;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .weight-logger-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .weight-logger-expanded {
+      display: none;
+      padding: 12px 0 0;
+    }
+    
+    .weight-logger-expanded.active {
+      display: block;
+    }
+    
+    .weight-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    .weight-input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid var(--gray-300);
+      background: var(--white);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 14px;
+      text-align: center;
+    }
+    
+    .weight-input:focus {
+      outline: none;
+      border-color: var(--black);
+    }
+    
+    .weight-save-btn {
+      padding: 10px 16px;
+      border: 1px solid var(--black);
+      background: var(--black);
+      color: var(--white);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .maxes-row {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--gray-200);
+    }
+    
+    .maxes-label {
+      font-size: 10px;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+    
+    .maxes-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    
+    .max-item {
+      text-align: center;
+      padding: 8px 4px;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .max-item:active {
+      background: var(--gray-100);
+    }
+    
+    .max-name {
+      font-size: 9px;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+    
+    .max-value {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    /* NAV */
+    .nav {
+      display: flex;
+      border-bottom: 1px solid var(--gray-200);
+      background: var(--white);
+      position: sticky;
+      top: 156px;
+      z-index: 99;
+    }
+    
+    .nav-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: none;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--gray-400);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .nav-btn.active {
+      color: var(--black);
+      border-bottom-color: var(--black);
+    }
+    
+    /* VIEWS */
+    .view {
+      display: none;
+      padding: 20px;
+    }
+    
+    .view.active {
+      display: block;
+    }
+    
+    /* TODAY VIEW */
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--gray-200);
+      border: 1px solid var(--gray-200);
+      margin-bottom: var(--spacing-lg);
+    }
+    
+    .stat-box {
+      background: var(--white);
+      padding: 16px;
+      text-align: center;
+    }
+    
+    .weight-log {
+      margin-bottom: 32px;
+    }
+    
+    .section-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--gray-500);
+      margin-bottom: 16px;
+    }
+    
+    .input-row {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .input-minimal {
+      flex: 1;
+      padding: 16px;
+      border: 1px solid var(--gray-300);
+      background: var(--white);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    
+    .input-minimal:focus {
+      outline: none;
+      border-color: var(--black);
+    }
+    
+    .btn {
+      padding: 14px;
+      border: 1px solid var(--black);
+      background: var(--black);
+      color: var(--white);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+    
+    .btn:active {
+      transform: scale(0.98);
+    }
+    
+    .btn-outline {
+      background: var(--white);
+      color: var(--black);
+    }
+    
+    .exercise-grid {
+      display: grid;
+      gap: 1px;
+      background: var(--gray-200);
+      border: 1px solid var(--gray-200);
+    }
+    
+    .exercise-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: var(--gray-200);
+      border: 1px solid var(--gray-200);
+    }
+    
+    .exercise-card {
+      background: var(--white);
+      padding: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .exercise-card:active {
+      background: var(--gray-50);
+    }
+    
+    .exercise-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    
+    .exercise-name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+    
+    .exercise-prescription {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-bottom: 8px;
+    }
+    
+    .exercise-last {
+      font-size: 12px;
+      color: var(--gray-400);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .pr-badge {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--black);
+      border-radius: 50%;
+    }
+    
+    .status-badge {
+      padding: 3px 8px;
+      background: var(--black);
+      color: var(--white);
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    /* WEEK VIEW */
+    .week-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .day-card {
+      border: 1px solid var(--gray-200);
+      padding: 16px;
+      background: var(--white);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .day-card.active {
+      border-color: var(--black);
+      border-width: 2px;
+      padding: 15px;
+    }
+    
+    .day-card:active {
+      background: var(--gray-50);
+    }
+    
+    .day-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .day-number {
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .day-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .day-exercises {
+      font-size: 12px;
+      color: var(--gray-500);
+      line-height: 1.6;
+    }
+    
+    /* HISTORY VIEW */
+    .history-filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .filter-btn {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid var(--gray-300);
+      background: var(--white);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .filter-btn.active {
+      background: var(--black);
+      color: var(--white);
+      border-color: var(--black);
+    }
+    
+    .session-card {
+      border: 1px solid var(--gray-200);
+      padding: 16px;
+      margin-bottom: 12px;
+      background: var(--white);
+    }
+    
+    .session-date {
+      font-weight: 600;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+    
+    .session-exercises {
+      font-size: 12px;
+      color: var(--gray-500);
+      line-height: 1.6;
+    }
+    
+    .session-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--gray-200);
+    }
+    
+    .action-btn {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid var(--gray-300);
+      background: var(--white);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--gray-600);
+    }
+    
+    .action-btn:active {
+      background: var(--gray-50);
+    }
+    
+    .action-btn.delete {
+      color: #dc2626;
+      border-color: #dc2626;
+    }
+    
+    /* WEIGHT HISTORY */
+    .weight-chart {
+      border: 1px solid var(--gray-200);
+      padding: 20px;
+      margin-bottom: 20px;
+      background: var(--gray-50);
+    }
+    
+    .weight-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--gray-200);
+      border: 1px solid var(--gray-200);
+      margin-bottom: 20px;
+    }
+    
+    .weight-stat-box {
+      background: var(--white);
+      padding: 16px;
+      text-align: center;
+    }
+    
+    .weight-stat-label {
+      font-size: 10px;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+    
+    .weight-stat-value {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    
+    .weight-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: var(--gray-200);
+      border: 1px solid var(--gray-200);
+    }
+    
+    .weight-item {
+      background: var(--white);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .weight-date {
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+    
+    .weight-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .weight-delete {
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--gray-300);
+      background: var(--white);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-400);
+      margin-left: 12px;
+    }
+    
+    /* MODAL */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--white);
+      z-index: 1000;
+      display: none;
+      overflow-y: auto;
+    }
+    
+    .modal.active {
+      display: block;
+    }
+    
+    .modal-header {
+      padding: 20px;
+      border-bottom: 2px solid var(--black);
+      background: var(--white);
+      position: sticky;
+      top: 0;
+      z-index: 101;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-title {
+      font-family: 'Archivo', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+    }
+    
+    .modal-prescription {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
+    
+    .close-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--gray-300);
+      background: var(--white);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-content {
+      padding: 20px;
+    }
+    
+    .section-header {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+      margin-top: 24px;
+    }
+    
+    .section-header:first-child {
+      margin-top: 0;
+    }
+    
+    .history-chart {
+      border: 1px solid var(--gray-200);
+      padding: 16px;
+      margin-bottom: 16px;
+      background: var(--gray-50);
+    }
+    
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: var(--gray-200);
+      border: 1px solid var(--gray-200);
+      margin-bottom: 24px;
+    }
+    
+    .history-item {
+      background: var(--white);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .history-date {
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+    
+    .history-sets {
+      font-size: 13px;
+      font-weight: 500;
+    }
+    
+    .set-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .set-row {
+      display: grid;
+      grid-template-columns: 36px 1fr 1fr 36px;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    .set-num {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+    }
+    
+    .set-input {
+      padding: 12px;
+      border: 1px solid var(--gray-300);
+      background: var(--white);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 14px;
+      text-align: center;
+    }
+    
+    .set-input:focus {
+      outline: none;
+      border-color: var(--black);
+    }
+    
+    .remove-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--gray-300);
+      background: var(--white);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-400);
+    }
+    
+    .notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: var(--black);
+      color: var(--white);
+      padding: 12px 20px;
+      font-size: 12px;
+      font-weight: 500;
+      z-index: 2000;
+      opacity: 0;
+      transition: all 0.3s;
+    }
+    
+    .notification.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="today-badge" id="todayBadge">TODAY</div>
+      <div class="workout-title" id="workoutTitle">Rest Day</div>
+      <div class="workout-subtitle" id="workoutSubtitle">Recovery & Growth</div>
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-label">Week</div>
+          <div class="stat-value" id="weekNumber">1</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Weight</div>
+          <div class="stat-value" id="currentWeight">--</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Complete</div>
+          <div class="stat-value" id="weekProgress">0/5</div>
+        </div>
+      </div>
+      
+      <div class="weight-logger">
+        <div class="weight-logger-collapsed" id="weightLoggerToggle">
+          <div class="weight-logger-label">Body Weight</div>
+          <div class="weight-logger-value" id="weightLoggerValue">Tap to log →</div>
+        </div>
+        <div class="weight-logger-expanded" id="weightLoggerExpanded">
+          <div class="weight-input-row">
+            <input type="number" class="weight-input" id="weightInput" placeholder="Enter weight" step="0.1">
+            <button class="weight-save-btn" id="saveWeightBtn">Save</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="maxes-row">
+        <div class="maxes-label">One-Rep Maxes</div>
+        <div class="maxes-grid">
+          <div class="max-item" data-lift="Squat">
+            <div class="max-name">Squat</div>
+            <div class="max-value" id="maxSquat">--</div>
+          </div>
+          <div class="max-item" data-lift="Bench">
+            <div class="max-name">Bench</div>
+            <div class="max-value" id="maxBench">--</div>
+          </div>
+          <div class="max-item" data-lift="Dead">
+            <div class="max-name">Dead</div>
+            <div class="max-value" id="maxDead">--</div>
+          </div>
+          <div class="max-item" data-lift="OHP">
+            <div class="max-name">OHP</div>
+            <div class="max-value" id="maxOHP">--</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="nav">
+      <button class="nav-btn active" data-view="today">Today</button>
+      <button class="nav-btn" data-view="week">Week</button>
+      <button class="nav-btn" data-view="history">Lifts</button>
+      <button class="nav-btn" data-view="weight">Weight</button>
+    </div>
+    
+    <div class="view active" id="todayView"></div>
+    <div class="view" id="weekView"></div>
+    <div class="view" id="historyView"></div>
+    <div class="view" id="weightView"></div>
+  </div>
+  
+  <div class="modal" id="exerciseModal"></div>
+  <div class="notification" id="notification"></div>
+
+  <script src="app.js"></script>
+  <script>
+    // Register service worker for offline support
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {
+          // Silent fail - not critical
+        });
+      });
+    }
+  </script>
+</body>
+</html>
