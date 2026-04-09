@@ -57,9 +57,6 @@
       padding: 24px 20px;
       border-bottom: 2px solid var(--black);
       background: var(--white);
-      position: sticky;
-      top: 0;
-      z-index: 100;
     }
     
     .today-badge {
@@ -231,9 +228,6 @@
       display: flex;
       border-bottom: 1px solid var(--gray-200);
       background: var(--white);
-      position: sticky;
-      top: 156px;
-      z-index: 99;
     }
     
     .nav-btn {
@@ -420,6 +414,17 @@
       background: var(--white);
       cursor: pointer;
       transition: all 0.2s;
+      position: relative;
+    }
+    
+    .day-card::after {
+      content: 'TAP TO EDIT';
+      position: absolute;
+      bottom: 8px;
+      right: 12px;
+      font-size: 9px;
+      color: var(--gray-400);
+      letter-spacing: 0.05em;
     }
     
     .day-card.active {
