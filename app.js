@@ -376,11 +376,15 @@
         document.getElementById('weekView').innerHTML = `
           <div class="week-grid">
             ${[1, 2, 3, 4, 5].map(day => {
-              const program = PROGRAM[day];
+              const program = this.data.templates && this.data.templates[day] 
+                ? this.data.templates[day] 
+                : PROGRAM[day];
+              const isCustom = !!(this.data.templates && this.data.templates[day]);
+              
               return `
                 <div class="day-card ${day === dayNum ? 'active' : ''}" data-day="${day}">
                   <div class="day-header">
-                    <div class="day-number">Day ${day}</div>
+                    <div class="day-number">Day ${day}${isCustom ? ' ⚡' : ''}</div>
                     ${day === dayNum ? '<div class="status-badge">Today</div>' : ''}
                   </div>
                   <div class="day-title">${program.name}</div>
@@ -402,7 +406,7 @@
         document.querySelectorAll('.day-card[data-day]').forEach(card => {
           card.addEventListener('click', () => {
             const day = parseInt(card.dataset.day);
-            this.renderDayDetail(day);
+            this.customizeWorkout(day);
           });
         });
       }
@@ -751,17 +755,39 @@
         const values = weights.map(w => w.weight);
         const max = Math.max(...values);
         const min = Math.min(...values);
+        const range = max - min || 1;
+        const padding = 10;
+        const chartHeight = 120;
+        const chartWidth = 100; // percentage-based width
+
+        // Calculate points for line graph
+        const points = values.map((w, i) => {
+          const x = (i / (values.length - 1)) * 100;
+          const y = chartHeight - ((w - min) / range * (chartHeight - padding * 2)) - padding;
+          return `${x},${y}`;
+        }).join(' ');
+
+        // Generate dot circles
+        const dots = values.map((w, i) => {
+          const x = (i / (values.length - 1)) * 100;
+          const y = chartHeight - ((w - min) / range * (chartHeight - padding * 2)) - padding;
+          return `<circle cx="${x}%" cy="${y}" r="3" fill="var(--black)" stroke="var(--white)" stroke-width="1.5"/>`;
+        }).join('');
 
         return `
           <div style="font-size: 12px; color: var(--gray-500); margin-bottom: 12px;">Weight Trend (Last ${weights.length} entries)</div>
-          <div style="display: flex; align-items: flex-end; gap: 2px; height: 120px;">
-            ${values.map(w => {
-              const height = (w / max) * 100;
-              return `<div style="flex: 1; background: var(--black); height: ${height}%; min-height: 4px;"></div>`;
-            }).join('')}
-          </div>
+          <svg viewBox="0 0 100 ${chartHeight}" style="width: 100%; height: ${chartHeight}px;" preserveAspectRatio="none">
+            <polyline
+              points="${points}"
+              fill="none"
+              stroke="var(--black)"
+              stroke-width="2"
+              vector-effect="non-scaling-stroke"
+            />
+            ${dots}
+          </svg>
           <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--gray-400);">
-            <span>0 lb</span>
+            <span>${min} lb</span>
             <span>${max} lb (peak)</span>
           </div>
         `;
@@ -802,6 +828,11 @@
       openExercise(exerciseName, dayNum) {
         const lastSets = this.getLastSets(exerciseName) || [{ weight: 0, reps: 0 }];
         const history = this.getExerciseHistory(exerciseName);
+        
+        // Calculate suggested progressions
+        const lastWeight = lastSets[0]?.weight || 0;
+        const plusFive = lastWeight + 5;
+        const minusFive = Math.max(0, lastWeight - 5);
 
         document.getElementById('exerciseModal').innerHTML = `
           <div class="modal-header">
@@ -812,6 +843,19 @@
             <button class="close-btn" id="closeModal">×</button>
           </div>
           <div class="modal-content">
+            <div class="section-header">Quick Fill</div>
+            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+              <button class="btn btn-outline" id="copyLastBtn" style="flex: 1; font-size: 11px; padding: 10px;">
+                Copy Last<br><span style="font-size: 10px; opacity: 0.7;">${this.formatSets(lastSets)}</span>
+              </button>
+              <button class="btn btn-outline" id="plusFiveBtn" style="flex: 1; font-size: 11px; padding: 10px;">
+                +5lb<br><span style="font-size: 10px; opacity: 0.7;">${lastSets.length}×${lastSets[0]?.reps || 0} @ ${plusFive}lb</span>
+              </button>
+              <button class="btn btn-outline" id="minusFiveBtn" style="flex: 1; font-size: 11px; padding: 10px;">
+                -5lb<br><span style="font-size: 10px; opacity: 0.7;">${lastSets.length}×${lastSets[0]?.reps || 0} @ ${minusFive}lb</span>
+              </button>
+            </div>
+            
             <div class="section-header">Recent History</div>
             <div class="history-list">
               ${history.slice(0, 3).map(h => `
@@ -833,10 +877,33 @@
 
         document.getElementById('exerciseModal').classList.add('active');
 
-        this.renderSets(lastSets, exerciseName);
+        this.renderSets([{ weight: 0, reps: 0 }], exerciseName);
 
         document.getElementById('closeModal').addEventListener('click', () => {
           document.getElementById('exerciseModal').classList.remove('active');
+        });
+
+        // Quick fill: Copy last workout
+        document.getElementById('copyLastBtn').addEventListener('click', () => {
+          this.renderSets(JSON.parse(JSON.stringify(lastSets)), exerciseName);
+        });
+
+        // Quick fill: +5lb progression
+        document.getElementById('plusFiveBtn').addEventListener('click', () => {
+          const newSets = lastSets.map(set => ({
+            weight: set.weight + 5,
+            reps: set.reps
+          }));
+          this.renderSets(newSets, exerciseName);
+        });
+
+        // Quick fill: -5lb deload
+        document.getElementById('minusFiveBtn').addEventListener('click', () => {
+          const newSets = lastSets.map(set => ({
+            weight: Math.max(0, set.weight - 5),
+            reps: set.reps
+          }));
+          this.renderSets(newSets, exerciseName);
         });
 
         document.getElementById('addSetBtn').addEventListener('click', () => {
