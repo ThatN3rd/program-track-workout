@@ -125,12 +125,12 @@
 
       async init() {
         try {
-          const existing = await window.storage.get('program-data');
+          const existing = localStorage.getItem('program-data');
           if (!existing) {
-            await window.storage.set('program-data', JSON.stringify(SEED_DATA));
+            localStorage.setItem('program-data', JSON.stringify(SEED_DATA));
             this.data = SEED_DATA;
           } else {
-            this.data = JSON.parse(existing.value);
+            this.data = JSON.parse(existing);
           }
         } catch (e) {
           this.data = SEED_DATA;
@@ -143,7 +143,7 @@
 
       async saveData() {
         try {
-          await window.storage.set('program-data', JSON.stringify(this.data));
+          localStorage.setItem('program-data', JSON.stringify(this.data));
         } catch (e) {
           console.error('Save failed:', e);
         }
